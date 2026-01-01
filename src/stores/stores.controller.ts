@@ -1,34 +1,82 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { QueryStoreDto } from './dto/query-store.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { GetUser } from 'src/helper/decorator/user.decorator';
+import { MemberGuard } from 'src/auth/guard/member.guard';
+import { InvitationDto } from './dto/invitation.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('stores')
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
-  @Post()
-  create(@Body() createStoreDto: CreateStoreDto) {
-    return this.storesService.create(createStoreDto);
-  }
-
   @Get()
-  findAll() {
-    return this.storesService.findAll();
+  findAll(@Query() query: QueryStoreDto, @GetUser('userId') userId: string) {
+    return this.storesService.findAll(query, +userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.storesService.findOne(+id);
+  @Post()
+  createStore(
+    @Body() createDto: CreateStoreDto,
+    @GetUser('userId') userId: string,
+  ) {
+    return this.storesService.createStore(createDto, +userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto) {
-    return this.storesService.update(+id, updateStoreDto);
+  @UseGuards(MemberGuard)
+  @Get(':storeId')
+  findOne(@Param('storeId') storeId: string) {
+    return this.storesService.findOne(+storeId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.storesService.remove(+id);
+  @Patch(':storeId')
+  updateStore(
+    @Body() updateDto: UpdateStoreDto,
+    @Param('storeId') storeId: string,
+  ) {
+    return this.storesService.updateStore(updateDto, +storeId);
+  }
+
+  @Delete(':storeId')
+  deleteStore(@Param('storeId') storeId: string) {
+    return this.storesService.deleteStore(+storeId);
+  }
+
+  // Invitation endpoint
+  @Post(':storeId/invite-link')
+  createInviteLink(@Param('storeId') storeId: string) {
+    return this.storesService.createInviteLink(+storeId);
+  }
+
+  @Get(':storeId/invite-link')
+  getInviteLink(@Param('storeId') storeId: string) {
+    return this.storesService.getInviteLink(+storeId);
+  }
+
+  @Post(':storeId/invitations')
+  createInvitation(
+    @Body() invitationDto: InvitationDto,
+    @Param('storeId') storeId: string,
+  ) {
+    return this.storesService.createInvitation(invitationDto, +storeId);
+  }
+
+  @Get(':storeId/invitations')
+  getInvitations(@Param('storeId') storeId: string) {
+    return this.storesService.getInvitations(+storeId);
   }
 }

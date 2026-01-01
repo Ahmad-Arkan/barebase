@@ -5,8 +5,9 @@ import { StoresModule } from './stores/stores.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
+import { ConfigModule } from '@nestjs/config';
+import { MembersModule } from './members/members.module';
 
 @Module({
   imports: [
@@ -14,7 +15,10 @@ import { PrismaService } from './prisma/prisma.service';
     UsersModule,
     ProductsModule,
     AuthModule,
-    PrismaModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

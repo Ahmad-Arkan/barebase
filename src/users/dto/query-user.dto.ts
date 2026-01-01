@@ -1,8 +1,8 @@
 import { IsEmail, IsString } from 'class-validator';
 
-export class SignupDto {
+export class QueryUserDto {
   @IsString()
-  name: string;
+  search: string;
 
   @IsString()
   @IsEmail()

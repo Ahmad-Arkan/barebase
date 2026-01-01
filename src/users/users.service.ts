@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './repositories/users.repository';
+import { ErrorCode } from 'src/helper/enum/error-code';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly userRepo: UserRepository) {}
+
+  async findAll(query: QueryUserDto) {
+    return this.userRepo.findAll(query);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findOne(userId: number) {
+    const data = await this.userRepo.findById(userId);
+    if (!data)
+      throw new NotFoundException({
+        message: 'User not found',
+        errorCode: ErrorCode.USER_NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+
+    return data;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findByEmail(email: string) {
+    const data = await this.userRepo.findByEmail(email);
+    if (!data)
+      throw new NotFoundException({
+        message: 'User not found',
+        errorCode: ErrorCode.USER_NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+
+    return data;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async updateUser(updateDto: UpdateUserDto, userId: number) {
+    const user = await this.findOne(userId);
+
+    return await this.userRepo.updateUser(updateDto, user.userId);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async deleteUser(userId: number) {
+    const user = await this.findOne(userId);
+    const deleteDto = `${user.email}_deleted_${userId}`;
+    await this.userRepo.deleteUser(deleteDto, userId);
+
+    return { success: true, message: 'User deleted successfully' };
   }
 }
