@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "members" ALTER COLUMN "role" SET DEFAULT 'STAFF',
+ALTER COLUMN "status" SET DEFAULT 'PENDING';

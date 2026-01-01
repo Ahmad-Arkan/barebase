@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -14,82 +15,150 @@ datasource db {
 }
 
 model User {
-  userId          Int         @id @default(autoincrement()) @map("user_id")
-  avatar          String?     @db.VarChar(255)
-  name            String      @db.VarChar(30)
-  email           String      @unique @db.VarChar(255)
-  telephone       String?     @db.VarChar(20)
-  description     String?     @db.VarChar(255)
-  passwordHash    String      @db.VarChar(255) @map("password_hash")
+  userId       Int        @id @default(autoincrement()) @map("user_id")
+  avatar       String?    @db.VarChar(255)
+  name         String     @db.VarChar(30)
+  email        String     @unique @db.VarChar(255)
+  telephone    String?    @db.VarChar(20)
+  description  String?    @db.VarChar(255)
+  passwordHash String?    @map("password_hash") @db.VarChar(255)
+  userStatus   UserStatus @default(PENDING) @map("user_status")
+  userRole     UserRole   @default(MEMBER) @map("user_role")
 
-  createdAt       DateTime    @default(now()) @db.Timestamp(6) @map("created_at")
-  updatedAt       DateTime    @updatedAt @db.Timestamp(6) @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(6)
+
+  userSessions     UserSession[]
+  userVerification UserVerification[]
+  store            Store[]
+  member           Member[]
 
   @@map("users")
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPEND
+}
+
+enum UserRole {
+  MEMBER
+  ADMIN
+  SUPERADMIN
+}
+
+model UserSession {
+  sessionId        Int     @id @default(autoincrement()) @map("session_id")
+  userId           Int     @map("user_id")
+  refreshTokenHash String  @map("refresh_token_hash")
+  userAgent        String? @map("user_agent")
+  ipAddress        String? @map("ip_address")
+
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model UserVerification {
+  verificationId Int    @id @default(autoincrement()) @map("verification_id")
+  userId         Int    @unique @map("user_id")
+  tokenHash      String @unique @map("code_hash")
+
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("user_verifications")
+}
+
 model Store {
-  storeId         Int         @id @default(autoincrement()) @map("store_id")
-  avatar          String?     @db.VarChar(255)
-  name            String      @db.VarChar(30)
-  description     String?     @db.VarChar(255)
+  storeId     Int     @id @default(autoincrement()) @map("store_id")
+  ownerId     Int     @map("owner_id")
+  avatar      String? @db.VarChar(255)
+  name        String  @db.VarChar(30)
+  description String? @db.VarChar(255)
+  storeStatus StoreStatus @default(ACTIVE) @map("store_status")
+  inviteCode  String? @map("inviteCode") @db.VarChar(255)
 
-  createdAt       DateTime    @default(now()) @db.Timestamp(6) @map("created_at")
-  updatedAt       DateTime    @updatedAt @db.Timestamp(6) @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(6)
 
-  products        Product[]
-  categories      Category[]
+  products   Product[]
+  categories Category[]
+  member     Member[]
+  owner      User @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
 
   @@map("stores")
 }
 
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
+  SUSPEND
+}
+
+model Member {
+  memberId Int          @id @default(autoincrement()) @map("member_id")
+  userId   Int          @map("user_id")
+  storeId  Int          @map("store_id")
+  role     MemberRole   @default(STAFF)
+  status   MemberStatus @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user  User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+  @@map("members")
+}
+
+enum MemberRole {
+  STAFF
+  CASHIER
+  INVENTORY
+  MANAGER
+  OWNER
+}
+
+enum MemberStatus {
+  ACTIVE
+  PENDING
+  SUSPEND
+}
+
 model Product {
-  productId             Int               @id @default(autoincrement()) @map("product_id")
-  storeId               Int               @map("store_id")
-  title                 String            @db.VarChar(50)
-  price                 Decimal           @db.Decimal(18, 2) @default(0)
-  description           String?           @db.VarChar(255)
-  stock                 Int               @default(1)
-  categoryId            Int?              @map("category_id")
-  weightType            WeightType        @default(ABSOLUTE)
+  productId   Int        @id @default(autoincrement()) @map("product_id")
+  storeId     Int        @unique @map("store_id")
+  title       String     @db.VarChar(50)
+  price       Decimal    @default(0) @db.Decimal(18, 2)
+  description String?    @db.VarChar(255)
+  stock       Int        @default(1)
+  categoryId  Int?       @map("category_id")
+  weightType  WeightType @default(ABSOLUTE)
   // variantOptions
   // variantCombinations
 
-  status                ProductStatus     @default(UNAVAILABLE)
-  createdAt             DateTime          @default(now()) @db.Timestamp(6) @map("created_at")
-  updatedAt             DateTime          @updatedAt @db.Timestamp(6) @map("updated_at")
+  status    ProductStatus @default(UNAVAILABLE)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  images                Image[]
-  store                 Store             @relation(fields: [storeId], references: [storeId])
-  category              Category?         @relation(fields: [categoryId], references: [categoryId])
+  images   Image[]
+  store    Store     @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [categoryId], onDelete: Restrict)
 
   @@map("products")
-}
-
-model Image {
-  imageId         Int         @id @default(autoincrement()) @map("image_id")
-  ownerId         Int         @map("owner_id")
-  title           String?     @db.VarChar(50)
-  description     String?     @db.VarChar(255)
-  url             String      @db.VarChar(255)
-
-  createdAt       DateTime    @default(now()) @db.Timestamp(6) @map("created_at")
-  updatedAt       DateTime    @updatedAt @db.Timestamp(6) @map("updated_at")
-
-  product         Product     @relation(fields: [ownerId], references: [productId])
-
-  @@map("images")
-}
-
-model Category {
-  categoryId      Int       @id @default(autoincrement()) @map("category_id")
-  storeId         Int       @map("store_id")
-  name            String    @db.VarChar(30)
-
-  products        Product[]
-  store           Store     @relation(fields: [storeId], references: [storeId])
-
-  @@map("categories")
 }
 
 enum ProductStatus {
@@ -103,4 +172,30 @@ enum ProductStatus {
 enum WeightType {
   RELATIVE
   ABSOLUTE
+}
+
+model Category {
+  categoryId Int    @id @default(autoincrement()) @map("category_id")
+  storeId    Int    @unique @map("store_id")
+  name       String @db.VarChar(30)
+
+  products Product[]
+  store    Store     @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@map("categories")
+}
+
+model Image {
+  imageId     Int     @id @default(autoincrement()) @map("image_id")
+  ownerId     Int     @unique @map("owner_id")
+  title       String? @db.VarChar(50)
+  description String? @db.VarChar(255)
+  url         String  @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  product Product? @relation(fields: [ownerId], references: [productId], onDelete: Restrict)
+
+  @@map("images")
 }
