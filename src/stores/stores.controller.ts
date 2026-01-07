@@ -79,4 +79,17 @@ export class StoresController {
   getInvitations(@Param('storeId') storeId: string) {
     return this.storesService.getInvitations(+storeId);
   }
+
+  @Delete(':storeId/invitations/:invitationId')
+  deleteInvitation(
+    @GetUser('userId') userId: string,
+    @Param('storeId') storeId: string,
+    @Param('invitationId') invitationId: string,
+  ) {
+    return this.storesService.deleteInvitation(
+      +storeId,
+      +invitationId,
+      +userId,
+    );
+  }
 }

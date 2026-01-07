@@ -6,6 +6,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserSessionRepository } from './repositories/user-sessions.repository';
 import { UserVerificationRepository } from './repositories/user-verifications.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { MemberRepository } from 'src/members/members.repository';
+import { StoreRepository } from 'src/stores/stores.repository';
 
 @Module({
   imports: [PrismaModule],
@@ -16,6 +18,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     UserRepository,
     UserSessionRepository,
     UserVerificationRepository,
+    MemberRepository,
+    StoreRepository,
     PrismaService,
   ],
 })

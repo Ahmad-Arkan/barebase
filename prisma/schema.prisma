@@ -120,8 +120,8 @@ model Member {
   user  User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
   store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
 
-  @@unique([userId, storeId])
   @@map("members")
+  @@unique([userId, storeId])
 }
 
 enum MemberRole {
@@ -134,31 +134,40 @@ enum MemberRole {
 
 enum MemberStatus {
   ACTIVE
+  INACTIVE
   PENDING
   SUSPEND
 }
 
 model Product {
   productId   Int        @id @default(autoincrement()) @map("product_id")
-  storeId     Int        @unique @map("store_id")
+  storeId     Int        @map("store_id")
   title       String     @db.VarChar(50)
   price       Decimal    @default(0) @db.Decimal(18, 2)
   description String?    @db.VarChar(255)
   stock       Int        @default(1)
+  sku         String?       
+  plu         String?       
+  barcode     String?    @db.VarChar(50)
   categoryId  Int?       @map("category_id")
   weightType  WeightType @default(ABSOLUTE)
   // variantOptions
   // variantCombinations
-
   status    ProductStatus @default(UNAVAILABLE)
+
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(6)
 
-  images   Image[]
+  images   ProductImage[]
   store    Store     @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
-  category Category? @relation(fields: [categoryId], references: [categoryId], onDelete: Restrict)
+  category Category? @relation(fields: [categoryId], references: [categoryId], onDelete: SetNull)
 
   @@map("products")
+  @@unique([storeId, sku])
+  @@index([storeId, title])
+  @@index([barcode])
+  @@index([plu])
 }
 
 enum ProductStatus {
@@ -185,17 +194,16 @@ model Category {
   @@map("categories")
 }
 
-model Image {
+model ProductImage {
   imageId     Int     @id @default(autoincrement()) @map("image_id")
-  ownerId     Int     @unique @map("owner_id")
-  title       String? @db.VarChar(50)
-  description String? @db.VarChar(255)
+  ownerId     Int     @map("owner_id")
+  publicId    String  @db.VarChar(255) @map("public_id")
+  order       Int     @default(0)
+  altText     String? @db.VarChar(50) @map("alt_text")
+  thumbnail   String? @db.VarChar(255)
   url         String  @db.VarChar(255)
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+  product Product? @relation(fields: [ownerId], references: [productId], onDelete: Cascade)
 
-  product Product? @relation(fields: [ownerId], references: [productId], onDelete: Restrict)
-
-  @@map("images")
+  @@map("product_images")
 }

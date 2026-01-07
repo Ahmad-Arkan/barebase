@@ -8,7 +8,8 @@ import { UsersModule } from 'src/users/users.module';
 import { UserSessionRepository } from 'src/users/repositories/user-sessions.repository';
 import { UserVerificationRepository } from 'src/users/repositories/user-verifications.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { JwtAuthStrategy } from './strategies/jwt-auth.strategy';
+import { JwtAuthStrategy } from './strategy/jwt-auth.strategy';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -30,6 +31,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
     UserSessionRepository,
     UserVerificationRepository,
     JwtAuthStrategy,
+    GoogleStrategy,
   ],
 })
 export class AuthModule {}

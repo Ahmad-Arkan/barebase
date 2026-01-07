@@ -7,6 +7,7 @@ import { QueryStoreDto } from 'src/stores/dto/query-store.dto';
 import { userSelections } from 'src/users/repositories/users.repository';
 import { storeSelections } from 'src/stores/stores.repository';
 import { InvitationDto } from 'src/stores/dto/invitation.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 
 const selections = {
   memberId: true,
@@ -42,8 +43,8 @@ export class MemberRepository {
     });
   }
 
-  async findAllMember(storeId: number, query: QueryMemberDto) {
-    const { search, email } = query;
+  async findAllMember(storeId: number, query?: QueryMemberDto) {
+    const { search, email } = query || {};
 
     return await this.prisma.member.findMany({
       where: {
@@ -57,7 +58,7 @@ export class MemberRepository {
       },
       include: {
         user: {
-          select: userSelections,
+          select: { ...userSelections },
         },
       },
     });
@@ -66,8 +67,12 @@ export class MemberRepository {
   async findOne(storeId: number, userId: number) {
     return await this.prisma.member.findFirst({
       where: { storeId, userId },
-      select: { ...selections },
+      include: { user: { select: { ...userSelections } } },
     });
+  }
+
+  async findById(memberId: number) {
+    return await this.prisma.member.findFirst({ where: { memberId } });
   }
 
   async createMember(
@@ -84,12 +89,11 @@ export class MemberRepository {
   async updateMember(
     storeId: number,
     userId: number,
-    role: MemberRole,
-    status: MemberStatus,
+    updateMemberDto: UpdateMemberDto,
   ) {
     return await this.prisma.member.update({
       where: { userId_storeId: { storeId, userId } },
-      data: { role, status },
+      data: { ...updateMemberDto },
       select: { ...selections },
     });
   }
@@ -101,9 +105,33 @@ export class MemberRepository {
   }
 
   // Invitation repo
-  async createInvitation(invitationDto: InvitationDto, storeId: number) {
+  async createInvitation(userId: number, storeId: number, role: MemberRole) {
     return await this.prisma.member.create({
-      data: {},
+      data: { userId, storeId, role, status: 'PENDING' },
+    });
+  }
+
+  async getInvitations(userId: number) {
+    return await this.prisma.member.findMany({
+      where: { userId, status: 'PENDING' },
+      select: { ...selections },
+    });
+  }
+
+  async joinFromInvited(inviteId: number, accept: boolean, userId: number) {
+    const invitation = await this.prisma.member.findFirst({
+      where: {
+        memberId: inviteId,
+        userId: userId,
+        status: 'PENDING',
+      },
+    });
+
+    if (!invitation) return null;
+
+    return await this.prisma.member.update({
+      where: { memberId: inviteId },
+      data: { status: accept ? 'ACTIVE' : 'INACTIVE' },
     });
   }
 }

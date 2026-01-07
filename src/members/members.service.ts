@@ -8,7 +8,7 @@ import { UpdateMemberDto } from './dto/update-member.dto';
 export class MembersService {
   constructor(private readonly memberRepo: MemberRepository) {}
 
-  findAll(storeId: number, query: QueryMemberDto) {
+  async findAll(storeId: number, query: QueryMemberDto) {
     return this.memberRepo.findAllMember(storeId, query);
   }
 
@@ -23,11 +23,16 @@ export class MembersService {
     return member;
   }
 
-  updateMember(storeId: number, userId: number, updateDto: UpdateMemberDto) {
-    // return this.memberRepo.updateMember(storeId, userId, role, status);
+  async updateMember(
+    storeId: number,
+    userId: number,
+    updateMemberDto: UpdateMemberDto,
+  ) {
+    return this.memberRepo.updateMember(storeId, userId, updateMemberDto);
   }
 
-  deleteMember(storeId: number, userId: number) {
-    return this.memberRepo.deleteMember(storeId, userId);
+  async deleteMember(storeId: number, userId: number) {
+    await this.memberRepo.deleteMember(storeId, userId);
+    return { success: true, message: 'Member deleted successfully' };
   }
 }

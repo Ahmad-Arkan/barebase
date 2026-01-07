@@ -18,3 +18,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   console.log('Sending success', email, token);
 }
+
+export async function sendInvitationEmail(email: string, token: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+}

@@ -63,16 +63,22 @@ export class UserRepository {
       where: { email, deletedAt: null },
       select: {
         ...userSelections,
+        passwordHash: true,
+        deletedAt: true,
       },
     });
   }
 
   async createUser(userDto: CreateUserDto) {
-    return await this.prisma.user.create({
-      data: {
+    return await this.prisma.user.upsert({
+      where: { email: userDto.email },
+      create: {
         name: userDto.name,
         email: userDto.email,
+        avatar: userDto.avatar,
+        userStatus: userDto.userStatus,
       },
+      update: { name: userDto.name },
       select: {
         ...userSelections,
       },

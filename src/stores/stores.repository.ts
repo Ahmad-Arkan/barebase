@@ -68,4 +68,16 @@ export class StoreRepository {
       where: { storeId },
     });
   }
+
+  async getInvitations(storeId: number) {
+    return await this.prisma.member.findMany({
+      where: { storeId, status: 'PENDING' },
+    });
+  }
+
+  async getInvitationToken(token: string) {
+    return await this.prisma.store.findFirst({
+      where: { inviteCode: token },
+    });
+  }
 }

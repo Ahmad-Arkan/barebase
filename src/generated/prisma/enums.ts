@@ -50,6 +50,7 @@ export type MemberRole = (typeof MemberRole)[keyof typeof MemberRole]
 
 export const MemberStatus = {
   ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
   PENDING: 'PENDING',
   SUSPEND: 'SUSPEND'
 } as const

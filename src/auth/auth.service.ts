@@ -66,7 +66,7 @@ export class AuthService {
       { sub: payload.sub, type: 'refresh' },
       {
         secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: '7d',
+        expiresIn: '14d',
       },
     );
 
@@ -152,14 +152,14 @@ export class AuthService {
       throw new UnauthorizedException({
         message: err.message || 'Unauthorized',
         errorCode: err.response?.errorCode || ErrorCode.INVALID_TOKEN,
+        statusCode: err.response?.statusCode || HttpStatus.UNAUTHORIZED,
       });
     }
   }
 
   // REGULAR LOGIN HANDLER
   async login(loginDto: LoginDto, meta: FastifyRequest) {
-    const email = await this.userRepo.findByEmail(loginDto.email);
-    const user = await this.userRepo.findFull(email?.userId);
+    const user = await this.userRepo.findByEmail(loginDto.email);
 
     if (!user)
       throw new NotFoundException({
@@ -194,7 +194,7 @@ export class AuthService {
 
     // RESPONSE
     const generateToken = await this.tokenSession(user.email, meta);
-    const { passwordHash, ...safeUser } = user;
+    const { passwordHash, deletedAt, ...safeUser } = user;
 
     return {
       success: true,
@@ -352,6 +352,44 @@ export class AuthService {
     return {
       success: true,
       message: 'Logged out successfully',
+    };
+  }
+
+  // OAUTH LOGIC
+  async findOrCreateUserGoogle(
+    googleUser: any,
+    meta: FastifyRequest,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    token: { accessToken: string; refreshToken: string };
+    data: any;
+  }> {
+    let existingUser = await this.userRepo.findByEmail(googleUser.email);
+
+    if (existingUser) {
+      existingUser = await this.userRepo.updateUser(
+        {
+          avatar: existingUser.avatar ? undefined : googleUser.picture,
+        },
+        existingUser.userId,
+      );
+    } else {
+      existingUser = await this.userRepo.createUser({
+        email: googleUser.email,
+        name: `${googleUser.firstName} ${googleUser.lastName}`,
+        avatar: googleUser.picture,
+        userStatus: 'ACTIVE',
+      });
+    }
+
+    const generateToken = await this.tokenSession(existingUser.email, meta);
+
+    return {
+      success: true,
+      message: 'Google login success',
+      token: generateToken,
+      data: existingUser,
     };
   }
 }

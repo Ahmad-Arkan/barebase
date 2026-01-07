@@ -58,7 +58,7 @@ export const ModelName = {
   Member: 'Member',
   Product: 'Product',
   Category: 'Category',
-  Image: 'Image'
+  ProductImage: 'ProductImage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -157,11 +157,15 @@ export const ProductScalarFieldEnum = {
   price: 'price',
   description: 'description',
   stock: 'stock',
+  sku: 'sku',
+  plu: 'plu',
+  barcode: 'barcode',
   categoryId: 'categoryId',
   weightType: 'weightType',
   status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -176,17 +180,17 @@ export const CategoryScalarFieldEnum = {
 export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
 
 
-export const ImageScalarFieldEnum = {
+export const ProductImageScalarFieldEnum = {
   imageId: 'imageId',
   ownerId: 'ownerId',
-  title: 'title',
-  description: 'description',
-  url: 'url',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  publicId: 'publicId',
+  order: 'order',
+  altText: 'altText',
+  thumbnail: 'thumbnail',
+  url: 'url'
 } as const
 
-export type ImageScalarFieldEnum = (typeof ImageScalarFieldEnum)[keyof typeof ImageScalarFieldEnum]
+export type ProductImageScalarFieldEnum = (typeof ProductImageScalarFieldEnum)[keyof typeof ProductImageScalarFieldEnum]
 
 
 export const SortOrder = {

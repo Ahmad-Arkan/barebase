@@ -8,7 +8,11 @@ import {
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import pc from 'picocolors';
+import fastifyCookie from '@fastify/cookie';
+import fastifyPassport from '@fastify/passport';
+import fastifySecureSession from '@fastify/secure-session';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -56,7 +60,11 @@ async function bootstrap() {
   app.register(helmet);
 
   await app.register(cors, {
-    origin: true,
+    origin: [
+      'https://barestore.ahmadrka.com',
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ],
     credentials: true,
   });
 
@@ -64,6 +72,25 @@ async function bootstrap() {
     max: 100,
     timeWindow: '1 minute',
   });
+
+  await app.register(multipart);
+
+  await app.register(fastifyCookie, {
+    secret: 'a-very-long-secret-key-12345678901234567890',
+  });
+
+  await app.register(fastifySecureSession, {
+    secret: 'a-very-long-secret-key-12345678901234567890',
+    salt: 'mq9H98BYS7PRAS7Q',
+    cookie: {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    },
+  });
+  await app.register(fastifyPassport.initialize());
+  await app.register(fastifyPassport.secureSession());
 
   await app.listen(process.env.PORT ?? 3000);
 }

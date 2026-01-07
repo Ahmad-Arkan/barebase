@@ -5,10 +5,17 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StoreRepository } from './stores.repository';
 import { MemberRepository } from 'src/members/members.repository';
+import { UserRepository } from 'src/users/repositories/users.repository';
 
 @Module({
   imports: [PrismaModule],
   controllers: [StoresController],
-  providers: [StoresService, StoreRepository, MemberRepository, PrismaService],
+  providers: [
+    StoresService,
+    StoreRepository,
+    UserRepository,
+    MemberRepository,
+    PrismaService,
+  ],
 })
 export class StoresModule {}

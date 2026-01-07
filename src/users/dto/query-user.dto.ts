@@ -1,10 +1,12 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class QueryUserDto {
+  @IsOptional()
   @IsString()
-  search: string;
+  search?: string;
 
+  @IsOptional()
   @IsString()
   @IsEmail()
-  email: string;
+  email?: string;
 }

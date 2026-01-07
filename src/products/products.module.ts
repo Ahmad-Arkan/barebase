@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
+import { ProductRepository } from './repositories/products.repository';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { MemberRepository } from 'src/members/members.repository';
+import { ProductFallbackController } from './product-fallback.controller';
+import { ProductImageRepository } from './repositories/product-images.repository';
 
 @Module({
-  controllers: [ProductsController],
-  providers: [ProductsService],
+  imports: [PrismaModule],
+  controllers: [ProductsController, ProductFallbackController],
+  providers: [
+    ProductsService,
+    ProductRepository,
+    ProductImageRepository,
+    MemberRepository,
+    PrismaService,
+  ],
 })
 export class ProductsModule {}

@@ -7,11 +7,15 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { GetUser } from 'src/helper/decorator/user.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -26,16 +30,39 @@ export class UsersController {
     return this.usersService.findOne(+userId);
   }
 
-  @Patch(':userId')
+  @Patch()
   updateUser(
     @Body() updateDto: UpdateUserDto,
-    @Param('userId') userId: string,
+    @GetUser('userId') userId: string,
   ) {
     return this.usersService.updateUser(updateDto, +userId);
   }
 
-  @Delete(':userId')
-  deleteUser(@Param('userId') userId: string) {
+  @Delete()
+  deleteUser(@GetUser('userId') userId: string) {
     return this.usersService.deleteUser(+userId);
+  }
+
+  // Invitation
+  @Get('invitations')
+  getInvitations(@GetUser('userId') userId: string) {
+    return this.usersService.getInvitations(+userId);
+  }
+
+  @Post('invitations')
+  joinFromToken(
+    @Body('token') token: string,
+    @GetUser('userId') userId: string,
+  ) {
+    return this.usersService.joinFromToken(token, +userId);
+  }
+
+  @Post('invitations/:inviteId')
+  joinFromInvited(
+    @Param('inviteId') inviteId: string,
+    @Body('accept') accept: boolean,
+    @GetUser('userId') userId: string,
+  ) {
+    return this.usersService.joinFromInvited(+inviteId, accept, +userId);
   }
 }
