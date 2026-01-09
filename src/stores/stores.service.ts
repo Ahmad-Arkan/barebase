@@ -16,6 +16,7 @@ import { InvitationDto } from './dto/invitation.dto';
 import { UserRepository } from 'src/users/repositories/users.repository';
 import { MemberRole } from 'src/generated/prisma/enums';
 import { sendInvitationEmail } from 'src/helper/function/resend-email';
+import { ProductRepository } from 'src/products/repositories/products.repository';
 
 @Injectable()
 export class StoresService {
@@ -23,6 +24,7 @@ export class StoresService {
     private readonly userRepo: UserRepository,
     private readonly storeRepo: StoreRepository,
     private readonly memberRepo: MemberRepository,
+    private readonly productRepo: ProductRepository,
   ) {}
 
   findAll(query: QueryStoreDto, userId: number) {
@@ -282,15 +284,16 @@ export class StoresService {
     }
     const member = await this.memberRepo.findOne(storeId, userId);
     if (!member) {
-      throw new NotFoundException({
-        message: 'Member not found',
-        errorCode: ErrorCode.MEMBER_NOT_FOUND,
-        statusCode: HttpStatus.NOT_FOUND,
+      throw new ForbiddenException({
+        message: 'You are not a member of this store',
+        errorCode: ErrorCode.INSUFFICIENT_PERMISSIONS,
+        statusCode: HttpStatus.FORBIDDEN,
       });
     }
 
     const memberCount = await this.memberRepo.getMemberCount(storeId);
+    const productsCount = await this.productRepo.getProductCount(storeId);
 
-    return { storeId, name: store.name, memberCount };
+    return { storeId: store.storeId, memberCount, productsCount };
   }
 }
